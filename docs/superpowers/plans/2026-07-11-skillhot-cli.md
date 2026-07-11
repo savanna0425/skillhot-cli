@@ -342,7 +342,7 @@ Implement `skillhot skill install --agent codex` as printed, explicit instructio
 
 - [ ] **Step 4: Run CLI tests, typecheck, and smoke commands**
 
-Run: `pnpm --filter @skillhot/cli test && pnpm typecheck && pnpm --filter @skillhot/cli exec skillhot find "写长文" --format json`
+Run: `pnpm --filter @skillhot/cli test && pnpm typecheck && pnpm --filter @skillhot/cli exec node dist/main.js find "写长文" --format json`
 
 Expected: all tests pass; the smoke command prints one parseable JSON object.
 
@@ -493,9 +493,9 @@ README must document `npx skillhot`, each CLI command, TypeScript API, curl exam
 
 - [ ] **Step 3: Build and test the packed artifact**
 
-Run: `pnpm install --frozen-lockfile && pnpm check && pnpm --filter @skillhot/cli pack && npm exec --yes --package ./packages/cli/*.tgz skillhot -- find "写长文" --format json`
+Run: `pnpm install --frozen-lockfile && pnpm check && pnpm --filter @skillhot/core pack && pnpm --filter @skillhot/cli pack && verification_dir="$(mktemp -d)" && cd "$verification_dir" && npm init -y && npm install "/absolute/path/to/packages/core/skillhot-core-0.1.0.tgz" "/absolute/path/to/packages/cli/skillhot-cli-0.1.0.tgz" && npx skillhot find "写长文" --format json`
 
-Expected: check passes and the packed binary prints valid recommendation JSON.
+Expected: check passes and an isolated npm project with the core tarball installed before the CLI tarball prints valid recommendation JSON. The release workflow publishes `@skillhot/core` before `@skillhot/cli`; direct installation of a CLI tarball alone is not a supported pre-publication path.
 
 - [ ] **Step 4: Verify public repository state and push**
 

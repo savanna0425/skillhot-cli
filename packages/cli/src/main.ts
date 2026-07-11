@@ -61,6 +61,27 @@ export function defaultCachePath(env: NodeJS.ProcessEnv = process.env): string {
   return join(env.XDG_CACHE_HOME ?? join(homedir(), '.cache'), 'skillhot', 'catalog.json')
 }
 
+function assertAllowedFlags(command: string | undefined, positionals: string[], flags: Record<string, FlagValue>): void {
+  const allowed = command === 'find'
+    ? ['format', 'limit', 'category', 'platform', 'license', 'status']
+    : command === 'show' || command === 'compare'
+      ? ['format']
+      : command === 'alternatives'
+        ? ['format', 'limit']
+        : command === 'prompt' && positionals[0] === 'install'
+          ? ['format', 'agent']
+          : command === 'update'
+            ? ['format', 'url']
+            : command === 'skill' && positionals[0] === 'install'
+              ? ['format', 'agent', 'source']
+              : command === 'serve'
+                ? ['host', 'port', 'allow-remote-host']
+                : []
+  for (const flag of Object.keys(flags)) {
+    if (!allowed.includes(flag)) throw new SkillHotError('INVALID_ARGUMENT', `--${flag} does not apply to ${command ?? 'this command'}.`)
+  }
+}
+
 function required(value: string | undefined, label: string): string {
   if (!value) throw new SkillHotError('INVALID_ARGUMENT', `Missing ${label}.`)
   return value
@@ -80,6 +101,11 @@ function stringFlag(value: FlagValue | undefined, fallback: string, name = 'flag
   return typeof value === 'string' ? value : fallback
 }
 
+function optionalStringFlag(value: FlagValue | undefined, name: string): string | undefined {
+  if (value === true) throw new SkillHotError('INVALID_ARGUMENT', `${name} requires a value.`)
+  return value
+}
+
 function outputFormat(value: FlagValue | undefined): OutputFormat {
   const format = stringFlag(value, 'text', 'format')
   if (format === 'text' || format === 'markdown' || format === 'json') return format
@@ -87,17 +113,28 @@ function outputFormat(value: FlagValue | undefined): OutputFormat {
 }
 
 function platforms(value: FlagValue | undefined): string[] | undefined {
-  const platform = typeof value === 'string' ? value : undefined
+  const platform = optionalStringFlag(value, 'platform')
   return platform === undefined ? undefined : platform.split(',').map((item) => item.trim()).filter(Boolean)
 }
 
-function skillInstallInstructions(agent: string): { agent: string; destination: string; copyCommand: string; notice: string } {
+function catalogStatus(value: FlagValue | undefined): 'active' | 'archived' | undefined {
+  const status = optionalStringFlag(value, 'status')
+  if (status === undefined || status === 'active' || status === 'archived') return status
+  throw new SkillHotError('INVALID_ARGUMENT', 'status must be active or archived.')
+}
+
+function shellQuote(value: string): string {
+  return `'${value.replaceAll("'", "'\\''")}'`
+}
+
+function skillInstallInstructions(agent: string, source: string): { agent: string; source: string; destination: string; copyCommand: string; notice: string } {
   if (agent !== 'codex') throw new SkillHotError('INVALID_ARGUMENT', 'skill install currently supports --agent codex only.')
   const destination = '~/.codex/skills/skillhot-discovery/SKILL.md'
   return {
     agent,
+    source,
     destination,
-    copyCommand: 'mkdir -p "$HOME/.codex/skills/skillhot-discovery" && cp /path/to/skillhot-discovery/SKILL.md "$HOME/.codex/skills/skillhot-discovery/SKILL.md"',
+    copyCommand: `mkdir -p "$HOME/.codex/skills/skillhot-discovery" && cp ${shellQuote(source)} "$HOME/.codex/skills/skillhot-discovery/SKILL.md"`,
     notice: 'No files were written. Review the source and run the copy command yourself only when you approve it.'
   }
 }
@@ -110,7 +147,10 @@ async function runOperationalCommand(command: string | undefined, positionals: s
     })
   }
   if (command === 'skill' && positionals[0] === 'install') {
-    return skillInstallInstructions(stringFlag(flags.agent, 'codex', 'agent'))
+    return skillInstallInstructions(
+      stringFlag(flags.agent, 'codex', 'agent'),
+      required(typeof flags.source === 'string' ? flags.source : undefined, 'source path (--source)')
+    )
   }
   if (command === 'serve') {
     throw new SkillHotError('NOT_IMPLEMENTED', 'The HTTP server is not available in this CLI build.')
@@ -131,16 +171,17 @@ export async function main(argv: string[], io: CliIo = process): Promise<number>
   try {
     const [command, ...rest] = argv
     const { flags, positionals } = parseArguments(rest)
+    assertAllowedFlags(command, positionals, flags)
     const env = io.env ?? process.env
     const engine = createDiscoveryEngine(await loadCatalog({ bundledPath: bundledCatalogPath(), cachePath: defaultCachePath(env) }))
     const value = command === 'find'
       ? engine.find({
         query: required(positionals.join(' '), 'query'),
         limit: numberFlag(flags.limit, 5),
-        category: typeof flags.category === 'string' ? flags.category : undefined,
+        category: optionalStringFlag(flags.category, 'category'),
         platforms: platforms(flags.platform),
-        license: typeof flags.license === 'string' ? flags.license : undefined,
-        catalogStatus: flags.status === 'active' || flags.status === 'archived' ? flags.status : undefined
+        license: optionalStringFlag(flags.license, 'license'),
+        catalogStatus: catalogStatus(flags.status)
       })
       : command === 'show'
         ? engine.show(required(positionals[0], 'skill reference'))
