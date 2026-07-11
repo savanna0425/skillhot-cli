@@ -1,3 +1,6 @@
 export { SkillHotError } from './errors.js'
+export { createDiscoveryEngine, createInstallPrompt } from './discovery.js'
+export { expandTerms, normalizeQuery, SYNONYMS } from './normalize.js'
 export { parseCatalog } from './schema.js'
+export type { DiscoveryEngine, FindOptions, FindResult, InstallPrompt, MatchReason, Recommendation } from './discovery.js'
 export type { Catalog, CatalogSkill, InstallCommandSource } from './types.js'
