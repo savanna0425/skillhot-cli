@@ -15,6 +15,11 @@ export interface LoadCatalogOptions {
   cachePath?: string
 }
 
+export interface LoadedCatalog {
+  catalog: Catalog
+  metadata: CatalogMetadata
+}
+
 export interface RefreshOptions {
   url: string
   cachePath: string
@@ -25,16 +30,28 @@ function parseCatalogText(text: string): Catalog {
   return parseCatalog(JSON.parse(text))
 }
 
-export async function loadCatalog({ bundledPath, cachePath }: LoadCatalogOptions): Promise<Catalog> {
+export async function loadCatalogWithMetadata({ bundledPath, cachePath }: LoadCatalogOptions): Promise<LoadedCatalog> {
   if (cachePath !== undefined) {
     try {
-      return parseCatalogText(await readFile(cachePath, 'utf8'))
+      const catalog = parseCatalogText(await readFile(cachePath, 'utf8'))
+      return {
+        catalog,
+        metadata: { source: 'cache', generatedAt: catalog.generatedAt, count: catalog.skills.length }
+      }
     } catch {
       // An absent or corrupt cache must not prevent offline use of the bundled catalog.
     }
   }
 
-  return parseCatalogText(await readFile(bundledPath, 'utf8'))
+  const catalog = parseCatalogText(await readFile(bundledPath, 'utf8'))
+  return {
+    catalog,
+    metadata: { source: 'bundled', generatedAt: catalog.generatedAt, count: catalog.skills.length }
+  }
+}
+
+export async function loadCatalog(options: LoadCatalogOptions): Promise<Catalog> {
+  return (await loadCatalogWithMetadata(options)).catalog
 }
 
 export async function refreshCatalog({ url, cachePath, fetchImpl = fetch }: RefreshOptions): Promise<CatalogMetadata> {

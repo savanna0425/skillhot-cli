@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
-import { loadCatalog, refreshCatalog } from '../src/index.js'
+import { loadCatalog, loadCatalogWithMetadata, refreshCatalog } from '../src/index.js'
 
 const validCatalogJson = JSON.stringify({
   version: 1,
@@ -46,6 +46,19 @@ test('falls back to the bundled catalog when the cache is invalid', async () => 
     const catalog = await loadCatalog({ bundledPath, cachePath })
 
     assert.equal(catalog.generatedAt, '2026-07-11T00:00:00Z')
+  })
+})
+
+test('reports the bundled source when an existing cache is invalid', async () => {
+  await withPaths(async ({ bundledPath, cachePath }) => {
+    await writeFile(bundledPath, validCatalogJson)
+    await writeFile(cachePath, '{"skills":[]}')
+
+    const result = await loadCatalogWithMetadata({ bundledPath, cachePath })
+
+    assert.equal(result.metadata.source, 'bundled')
+    assert.equal(result.metadata.generatedAt, '2026-07-11T00:00:00Z')
+    assert.equal(result.metadata.count, 1)
   })
 })
 

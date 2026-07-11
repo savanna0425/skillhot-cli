@@ -4,7 +4,7 @@ import { Writable } from 'node:stream'
 import { homedir, tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createDiscoveryEngine, loadCatalog, refreshCatalog, SkillHotError } from '@skillhot/core'
+import { createDiscoveryEngine, loadCatalogWithMetadata, refreshCatalog, SkillHotError } from '@skillhot/core'
 import { print, type OutputFormat } from './format.js'
 import { createServer, listen } from './server.js'
 
@@ -59,7 +59,7 @@ export function bundledCatalogPath(): string {
 }
 
 export function defaultCachePath(env: NodeJS.ProcessEnv = process.env): string {
-  return join(env.XDG_CACHE_HOME ?? join(homedir(), '.cache'), 'skillhot', 'catalog.json')
+  return join(env.XDG_CACHE_HOME || join(homedir(), '.cache'), 'skillhot', 'catalog.json')
 }
 
 function assertAllowedFlags(command: string | undefined, positionals: string[], flags: Record<string, FlagValue>): void {
@@ -184,18 +184,14 @@ export async function main(argv: string[], io: CliIo = process): Promise<number>
     assertAllowedFlags(command, positionals, flags)
     const env = io.env ?? process.env
     const cachePath = defaultCachePath(env)
-    const catalog = await loadCatalog({ bundledPath: bundledCatalogPath(), cachePath })
+    const { catalog, metadata } = await loadCatalogWithMetadata({ bundledPath: bundledCatalogPath(), cachePath })
     const engine = createDiscoveryEngine(catalog)
     if (command === 'serve') {
       const host = stringFlag(flags.host, '127.0.0.1', 'host')
       if (flags['allow-remote-host'] !== undefined && flags['allow-remote-host'] !== true) {
         throw new SkillHotError('INVALID_ARGUMENT', 'allow-remote-host does not take a value.')
       }
-      await listen(createServer(engine, {
-        source: existsSync(cachePath) ? 'cache' : 'bundled',
-        generatedAt: catalog.generatedAt,
-        count: catalog.skills.length
-      }), { host, port: portFlag(flags.port), allowRemote: flags['allow-remote-host'] === true })
+      await listen(createServer(engine, metadata), { host, port: portFlag(flags.port), allowRemote: flags['allow-remote-host'] === true })
       return 0
     }
     const value = command === 'find'

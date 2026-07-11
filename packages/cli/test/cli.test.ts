@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 import test from 'node:test'
-import { runCli } from '../dist/main.js'
+import { defaultCachePath, runCli } from '../dist/main.js'
 
 const execFile = promisify(execFileCallback)
 
@@ -96,6 +96,10 @@ test('serve rejects a remote host without explicit opt-in', async () => {
   assert.match(result.stderr, /UNSAFE_HOST/)
   assert.match(result.stderr, /allow-remote-host/)
   assert.equal(result.stdout, '')
+})
+
+test('uses the home cache directory when XDG_CACHE_HOME is empty', () => {
+  assert.match(defaultCachePath({ XDG_CACHE_HOME: '' }), /\.cache[\\/]skillhot[\\/]catalog\.json$/)
 })
 
 test('executes when invoked through an npm-style bin symlink', async () => {
