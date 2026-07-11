@@ -80,7 +80,7 @@ The repository starts as a pnpm workspace. `@skillhot/core` has no runtime depen
 
 The upstream website's working directory and deployed data remain separate from this repository. This repository contains a small test fixture and a curated distributable snapshot made only from fields intended for public discovery: repository identity, GitHub URL, public metadata, summaries, category/scenario labels, compatibility, license, activity, upstream source links, and installation guidance.
 
-Code is MIT. The distributable catalog carries a separate `DATA-LICENSE.md` and attribution/source note. Repository-specific licenses remain upstream licenses; they are not relicensed by this project. The updater validates schema and atomically replaces the cache only after a valid response is downloaded.
+Code is MIT. The distributable catalog carries a separate `DATA-LICENSE.md` and attribution/source note. Repository-specific licenses remain upstream licenses; they are not relicensed by this project. The default refresh URL is `https://skillhot.savs-ai.com/data/skills-lite.json`; it must remain a publicly accessible, versioned-compatible JSON endpoint. The updater validates schema and atomically replaces the cache only after a valid response is downloaded.
 
 ## Core data model
 
