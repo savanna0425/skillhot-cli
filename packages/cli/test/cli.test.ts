@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict'
+import { execFile as execFileCallback } from 'node:child_process'
+import { mkdtemp, rm, symlink } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { promisify } from 'node:util'
 import test from 'node:test'
 import { runCli } from '../dist/main.js'
+
+const execFile = promisify(execFileCallback)
 
 test('find JSON returns a single valid document with recommendation reasons', async () => {
   const result = await runCli(['find', '帮我写长文', '--format', 'json'])
@@ -89,4 +96,19 @@ test('serve rejects a remote host without explicit opt-in', async () => {
   assert.match(result.stderr, /UNSAFE_HOST/)
   assert.match(result.stderr, /allow-remote-host/)
   assert.equal(result.stdout, '')
+})
+
+test('executes when invoked through an npm-style bin symlink', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'skillhot-bin-'))
+  const binPath = join(directory, 'skillhot')
+
+  try {
+    await symlink(join(process.cwd(), 'dist', 'main.js'), binPath)
+    const result = await execFile(process.execPath, [binPath, 'find', '写长文', '--format', 'json'])
+
+    assert.ok(JSON.parse(result.stdout).recommendations[0].reasons.length)
+    assert.equal(result.stderr, '')
+  } finally {
+    await rm(directory, { recursive: true, force: true })
+  }
 })

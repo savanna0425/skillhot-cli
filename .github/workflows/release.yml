@@ -1,0 +1,76 @@
+name: Release packages
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: read
+
+jobs:
+  publish-core:
+    name: Publish @skillhot/core
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      configured: ${{ steps.package.outputs.configured }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - id: package
+        name: Check npm package prerequisite
+        shell: bash
+        run: |
+          if npm view @skillhot/core version --registry=https://registry.npmjs.org >/dev/null 2>&1; then
+            echo 'configured=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'configured=false' >> "$GITHUB_OUTPUT"
+            echo '@skillhot/core is not configured in npm; skipping trusted publish.'
+          fi
+      - name: Publish through npm trusted publishing
+        if: steps.package.outputs.configured == 'true'
+        run: pnpm --filter @skillhot/core publish --access public --provenance --no-git-checks
+
+  publish-cli:
+    name: Publish @skillhot/cli
+    needs: publish-core
+    if: needs.publish-core.outputs.configured == 'true'
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - id: package
+        name: Check npm package prerequisite
+        shell: bash
+        run: |
+          if npm view @skillhot/cli version --registry=https://registry.npmjs.org >/dev/null 2>&1; then
+            echo 'configured=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'configured=false' >> "$GITHUB_OUTPUT"
+            echo '@skillhot/cli is not configured in npm; skipping trusted publish.'
+          fi
+      - name: Publish through npm trusted publishing
+        if: steps.package.outputs.configured == 'true'
+        run: pnpm --filter @skillhot/cli publish --access public --provenance --no-git-checks

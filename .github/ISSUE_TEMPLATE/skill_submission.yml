@@ -1,0 +1,47 @@
+name: Skill submission
+description: Suggest a public upstream Agent Skill for catalog review.
+title: "catalog: "
+labels:
+  - catalog
+body:
+  - type: markdown
+    attributes:
+      value: Submit public discovery metadata only. SkillHot does not host or relicense upstream repositories.
+  - type: input
+    id: upstream_url
+    attributes:
+      label: Upstream repository URL
+      description: Link to the public canonical repository or skill source.
+      placeholder: https://github.com/owner/repository
+    validations:
+      required: true
+  - type: input
+    id: license
+    attributes:
+      label: Upstream license
+      description: State the upstream license or say that it is not provided.
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Discovery summary and use cases
+      description: Describe what users can discover without copying upstream content.
+    validations:
+      required: true
+  - type: textarea
+    id: platforms
+    attributes:
+      label: Supported agents or platforms
+      description: List documented platforms and link to the evidence when possible.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Submission checks
+      options:
+        - label: The upstream repository is public and this URL is its canonical source.
+          required: true
+        - label: I understand that upstream URLs and license information will be preserved and upstream content will not be relicensed.
+          required: true

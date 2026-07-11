@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync } from 'node:fs'
+import { existsSync, realpathSync } from 'node:fs'
 import { Writable } from 'node:stream'
 import { homedir, tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -240,7 +240,7 @@ export async function runCli(argv: string[]): Promise<{ exitCode: number; stdout
   return { exitCode, stdout: Buffer.concat(chunks.stdout).toString('utf8'), stderr: Buffer.concat(chunks.stderr).toString('utf8') }
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1] !== undefined && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   void main(process.argv.slice(2)).then((exitCode) => {
     process.exitCode = exitCode
   })

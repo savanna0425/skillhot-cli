@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "description": "Dependency-free catalog schema and discovery core for SkillHot.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/savanna0425/skillhot-cli.git",
+    "directory": "packages/core"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "engines": {
     "node": ">=20"
@@ -14,7 +22,7 @@
     }
   },
   "files": [
-    "dist"
+    "dist/src"
   ],
   "scripts": {
     "build": "tsc --project tsconfig.json",

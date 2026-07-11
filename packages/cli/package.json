@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "description": "Local, explainable discovery CLI for SkillHot agent skills.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/savanna0425/skillhot-cli.git",
+    "directory": "packages/cli"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "engines": {
     "node": ">=20"

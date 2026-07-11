@@ -1,0 +1,44 @@
+name: Bug report
+description: Report reproducible behavior in SkillHot.
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for helping improve SkillHot. Do not include credentials or public security vulnerabilities here.
+  - type: input
+    id: version
+    attributes:
+      label: SkillHot and Node.js versions
+      description: Include `skillhot --version` if available and `node --version`.
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command or request
+      description: Include the exact CLI command or HTTP request, with sensitive values removed.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and output
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I removed credentials and private data from this report.
+          required: true
+        - label: This is not a security vulnerability; I will use the private security advisory form for one.
+          required: true
