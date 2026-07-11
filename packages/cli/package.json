@@ -19,7 +19,7 @@
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "test": "pnpm run build && tsc --target ES2022 --module NodeNext --moduleResolution NodeNext --strict --esModuleInterop --skipLibCheck --rootDir test --outDir .test-dist test/cli.test.ts && node --test .test-dist/*.test.js",
+    "test": "pnpm run build && tsc --target ES2022 --module NodeNext --moduleResolution NodeNext --strict --esModuleInterop --skipLibCheck --rootDir test --outDir .test-dist test/*.test.ts && node --test .test-dist/*.test.js",
     "typecheck": "tsc --project tsconfig.json --noEmit"
   }
 }

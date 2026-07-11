@@ -81,3 +81,12 @@ test('rejects flags that do not apply to the selected command', async () => {
   assert.match(result.stderr, /limit.*show/)
   assert.equal(result.stdout, '')
 })
+
+test('serve rejects a remote host without explicit opt-in', async () => {
+  const result = await runCli(['serve', '--host', '0.0.0.0'])
+
+  assert.notEqual(result.exitCode, 0)
+  assert.match(result.stderr, /UNSAFE_HOST/)
+  assert.match(result.stderr, /allow-remote-host/)
+  assert.equal(result.stdout, '')
+})
