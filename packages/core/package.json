@@ -1,0 +1,24 @@
+{
+  "name": "@skillhot/core",
+  "version": "0.1.0",
+  "description": "Dependency-free catalog schema and discovery core for SkillHot.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "test": "pnpm run build && node --test dist/test/*.test.js",
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  }
+}

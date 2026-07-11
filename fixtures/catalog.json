@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "generatedAt": "2026-07-11T00:00:00Z",
+  "skills": [
+    {
+      "id": "obra/superpowers",
+      "fullName": "obra/superpowers",
+      "name": "superpowers",
+      "url": "https://github.com/obra/superpowers",
+      "sourceUrl": "https://github.com/obra/superpowers#readme",
+      "summary": "软件工程工作流与编码代理技能集合。",
+      "category": "Coding",
+      "scenarios": ["复杂软件开发", "测试驱动开发"],
+      "platforms": ["Codex", "Claude Code"],
+      "license": "MIT",
+      "activity": "本周活跃",
+      "catalogStatus": "active",
+      "installCommand": "git clone https://github.com/obra/superpowers.git",
+      "installCommandSource": "catalog-extracted"
+    },
+    {
+      "id": "anthropics/skills",
+      "fullName": "anthropics/skills",
+      "name": "skills",
+      "url": "https://github.com/anthropics/skills",
+      "sourceUrl": "https://github.com/anthropics/skills#readme",
+      "summary": "写作与文档处理的通用代理技能。",
+      "category": "Writing",
+      "scenarios": ["长文写作", "文档编辑"],
+      "platforms": ["Claude Code"],
+      "license": "MIT",
+      "activity": "本月活跃",
+      "catalogStatus": "active",
+      "installCommand": "npx skills add anthropics/skills",
+      "installCommandSource": "upstream"
+    },
+    {
+      "id": "skillhot/data-analysis",
+      "fullName": "skillhot/data-analysis",
+      "name": "data-analysis",
+      "url": "https://skillhot.savs-ai.com/skills/data-analysis",
+      "sourceUrl": "https://skillhot.savs-ai.com/skills/data-analysis",
+      "summary": "面向表格、CSV 和图表的数据分析技能。",
+      "category": "Data Analysis",
+      "scenarios": ["CSV 分析", "数据可视化"],
+      "platforms": ["Codex"],
+      "license": "MIT",
+      "activity": "本周活跃",
+      "catalogStatus": "active",
+      "installCommandSource": "unavailable"
+    },
+    {
+      "id": "skillhot/security-review",
+      "fullName": "skillhot/security-review",
+      "name": "security-review",
+      "url": "https://skillhot.savs-ai.com/skills/security-review",
+      "sourceUrl": "https://skillhot.savs-ai.com/skills/security-review",
+      "summary": "安全审查、漏洞排查与风险说明技能。",
+      "category": "Security",
+      "scenarios": ["代码安全审查", "漏洞分析"],
+      "platforms": ["Codex", "Claude Code"],
+      "license": "Apache-2.0",
+      "activity": "本月活跃",
+      "catalogStatus": "active",
+      "installCommandSource": "unavailable"
+    },
+    {
+      "id": "skillhot/curated-collection",
+      "fullName": "skillhot/curated-collection",
+      "name": "curated-collection",
+      "url": "https://skillhot.savs-ai.com/skills/curated-collection",
+      "sourceUrl": "https://skillhot.savs-ai.com/skills/curated-collection",
+      "summary": "用于发现和整理可复用代理技能的精选集合。",
+      "category": "Collection",
+      "scenarios": ["技能发现", "工具整理"],
+      "platforms": ["Codex"],
+      "license": "MIT",
+      "activity": "已归档",
+      "catalogStatus": "archived",
+      "installCommandSource": "unavailable"
+    }
+  ]
+}
