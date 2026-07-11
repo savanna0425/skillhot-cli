@@ -12,7 +12,7 @@
     "build": "pnpm --filter @skillhot/core build && pnpm --filter @skillhot/cli build",
     "check": "pnpm typecheck && pnpm test && pnpm validate:skill && pnpm validate:catalog && pnpm build && pnpm smoke:pack",
     "smoke:pack": "node scripts/verify-packed-cli.mjs",
-    "test": "pnpm --filter @skillhot/core test && pnpm --filter @skillhot/cli test && node scripts/validate-skill.test.mjs && node --test scripts/verify-typecheck-order.test.mjs",
+    "test": "pnpm --filter @skillhot/core test && pnpm --filter @skillhot/cli test && node scripts/validate-skill.test.mjs && node --test scripts/verify-typecheck-order.test.mjs scripts/verify-workflow-setup.test.mjs",
     "typecheck": "pnpm --filter @skillhot/core build && pnpm --filter @skillhot/cli typecheck",
     "validate:catalog": "pnpm --filter @skillhot/core build && node scripts/validate-catalog.mjs",
     "validate:skill": "node scripts/validate-skill.mjs skills/skillhot-discovery/SKILL.md"

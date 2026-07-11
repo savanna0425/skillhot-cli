@@ -21,6 +21,9 @@ jobs:
           - '22'
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.1
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
