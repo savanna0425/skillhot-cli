@@ -48,3 +48,12 @@ test('skill install emits only user-owned copy instructions', async () => {
   assert.match(instructions.notice, /No files were written/)
   assert.equal(result.stderr, '')
 })
+
+test('update requires an explicit normalized catalog URL', async () => {
+  const result = await runCli(['update', '--format', 'json'])
+
+  assert.notEqual(result.exitCode, 0)
+  assert.match(result.stderr, /INVALID_ARGUMENT/)
+  assert.match(result.stderr, /url/)
+  assert.equal(result.stdout, '')
+})

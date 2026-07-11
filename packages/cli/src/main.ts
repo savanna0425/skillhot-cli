@@ -20,8 +20,6 @@ export interface CliIo {
   env?: NodeJS.ProcessEnv
 }
 
-const CATALOG_UPDATE_URL = 'https://skillhot.savs-ai.com/data/catalog.json'
-
 export function parseArguments(argv: string[]): ParsedArguments {
   const flags: Record<string, FlagValue> = {}
   const positionals: string[] = []
@@ -107,7 +105,7 @@ function skillInstallInstructions(agent: string): { agent: string; destination: 
 async function runOperationalCommand(command: string | undefined, positionals: string[], flags: Record<string, FlagValue>, env: NodeJS.ProcessEnv) {
   if (command === 'update') {
     return refreshCatalog({
-      url: stringFlag(flags.url, CATALOG_UPDATE_URL, 'url'),
+      url: required(typeof flags.url === 'string' ? flags.url : undefined, 'normalized catalog URL (--url)'),
       cachePath: defaultCachePath(env)
     })
   }
