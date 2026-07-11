@@ -30,6 +30,7 @@ function sourceId(value) {
 function mapSkill(record) {
   const installCommand = optionalString(record.installCommand)
   const description = optionalString(record.description)
+  const howToUse = optionalString(record.howToUse)
 
   return {
     id: sourceId(record.id),
@@ -39,6 +40,7 @@ function mapSkill(record) {
     sourceUrl: record.url,
     summary: record.summary,
     ...(description === undefined ? {} : { description }),
+    ...(howToUse === undefined ? {} : { howToUse }),
     category: record.category,
     scenarios: record.scenarios,
     platforms: record.platforms,

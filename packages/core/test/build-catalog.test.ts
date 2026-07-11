@@ -35,3 +35,30 @@ test('rejects a source record without a usable ID', async () => {
     await rm(directory, { recursive: true, force: true })
   }
 })
+
+test('preserves upstream usage guidance in the public catalog', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'skillhot-build-catalog-'))
+  const sourcePath = join(directory, 'usage-source.json')
+  const originalSnapshot = await readFile(outputPath)
+  await writeFile(sourcePath, JSON.stringify({
+    meta: { generatedAt: '2026-07-11T00:00:00Z' },
+    skills: [{
+      id: 1, fullName: 'example/usage', name: 'usage', url: 'https://example.test/usage',
+      summary: 'A record with user-facing usage guidance.', category: 'Testing', scenarios: ['Tests'], platforms: ['Codex'],
+      howToUse: 'Read the upstream README, install the Skill, then run a small task.',
+      license: 'MIT', activity: 'active', catalogStatus: 'active'
+    }]
+  }))
+
+  try {
+    await execFile(process.execPath, [buildCatalogPath], {
+      cwd: projectRoot,
+      env: { ...process.env, SKILLHOT_SOURCE_CATALOG: sourcePath }
+    })
+    const catalog = JSON.parse(await readFile(outputPath, 'utf8'))
+    assert.equal(catalog.skills[0].howToUse, 'Read the upstream README, install the Skill, then run a small task.')
+  } finally {
+    await writeFile(outputPath, originalSnapshot)
+    await rm(directory, { recursive: true, force: true })
+  }
+})

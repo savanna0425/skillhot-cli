@@ -8,6 +8,7 @@ export interface CatalogSkill {
   sourceUrl: string
   summary: string
   description?: string
+  howToUse?: string
   category: string
   scenarios: string[]
   platforms: string[]

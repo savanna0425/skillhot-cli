@@ -26,6 +26,7 @@ function isCatalogSkill(value: unknown): value is CatalogSkill {
     && isNonEmptyString(value.sourceUrl)
     && isNonEmptyString(value.summary)
     && (value.description === undefined || typeof value.description === 'string')
+    && (value.howToUse === undefined || typeof value.howToUse === 'string')
     && isNonEmptyString(value.category)
     && isStringArray(value.scenarios)
     && isStringArray(value.platforms)
