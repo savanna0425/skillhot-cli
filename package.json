@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build:catalog": "pnpm --filter @skillhot/core build && node scripts/build-catalog.mjs",
-    "typecheck": "pnpm --filter @skillhot/core typecheck"
+    "typecheck": "pnpm --filter @skillhot/core typecheck && pnpm --filter @skillhot/cli typecheck"
   },
   "devDependencies": {
     "@types/node": "^20.17.30",
