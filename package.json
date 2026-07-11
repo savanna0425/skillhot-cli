@@ -8,6 +8,7 @@
     "node": ">=20"
   },
   "scripts": {
+    "build:catalog": "pnpm --filter @skillhot/core build && node scripts/build-catalog.mjs",
     "typecheck": "pnpm --filter @skillhot/core typecheck"
   },
   "devDependencies": {
