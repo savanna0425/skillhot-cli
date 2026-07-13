@@ -1,39 +1,20 @@
-# Agent rules for SkillHot CLI
+# Contributor guidance
 
-## Privacy is a release blocker
+## Privacy and release safety
 
-- Every commit in this repository must use `savanna0425 <83158499+savanna0425@users.noreply.github.com>` for both author and committer. Never use a real name, local-machine email, personal email, or another account identity.
-- Configure the identity at repository scope only:
+- Use your own Git identity. Prefer your GitHub noreply address and enable `user.useConfigOnly`; never impersonate a maintainer or commit a real name, personal email, machine name, home-directory path, token, API key, browser session, or credentials.
+- Use HTTPS remotes without embedded credentials. Verify the active GitHub account before a remote write and never paste authentication tokens into a file, command output, issue, or pull request.
+- Inspect `git status` and the relevant diff before staging. Stage explicit paths and preserve unrelated work.
+- Force pushes, history rewrites, repository visibility changes, releases, package publication, and other material external actions require explicit maintainer authorization.
+- Before making a release public, audit tracked files and reachable history for personal information and secrets. Review third-party catalog data before changing it so source metadata is not silently corrupted.
 
-  ```sh
-  git config --local user.name "savanna0425"
-  git config --local user.email "83158499+savanna0425@users.noreply.github.com"
-  git config --local user.useConfigOnly true
-  ```
+## Product boundaries
 
-- Before every push, run `git log --format='%an <%ae> | %cn <%ce>' --all | sort -u`. Stop and repair the history while the repository is private if any value differs from the approved identity, except GitHub-created commits that already use the same noreply address.
-- Never commit or publish a personal name, email address, home-directory path, host name, token, API key, browser session, private recording, or credentials. Do not echo authentication tokens in terminal output or documentation.
-- Treat `rg -n -i --hidden --glob '!.git/**' 'real-name|personal-email|/Users/|token|api[_-]?key|secret' .` as a starting point for a public-release audit. Review hits in curated upstream catalog data before changing them; do not silently corrupt source metadata.
+- SkillHot is a discovery layer, not a third-party installer. A search, comparison, or installation-prompt request does not authorize execution of a recommended command.
+- Present the upstream link and command-source label, then require explicit user approval before executing an installation command.
+- Keep catalog records attributable to their upstream repositories. Do not claim an npm package is published until the registry confirms it.
 
-## GitHub connection and publishing
+## Quality and public copy
 
-- Canonical remote: `https://github.com/savanna0425/skillhot-cli.git`. Use HTTPS; never add a remote containing credentials.
-- Authentication is via the already logged-in `gh` account `savanna0425`. Verify with `gh auth status` before any GitHub write. Do not run `gh auth login` against a different account without the owner's approval.
-- Check `git status -sb` and inspect the diff before staging. Stage explicit paths; never use `git add -A` in a mixed worktree.
-- Use short, factual commit messages. Run the relevant check before committing and report its exact result. Never claim a check, npm publication, GitHub visibility, release, or deployment succeeded without verifying it.
-- For ordinary changes, use a branch and a draft PR. Direct changes to `main`, force pushes, history rewrites, visibility changes, releases, and package publication require explicit owner authorization. A request to repair author privacy while the repository is private authorizes rewriting the affected private history and force-pushing the repaired history.
-- Before changing this repository to public, verify: the history passes the identity audit, the working tree is clean, the remote contains the intended commit, no private material is tracked, tests pass in proportion to the change, and public documentation makes only verified claims.
-
-## Product and safety boundaries
-
-- SkillHot is a discovery layer, not a third-party installer. Search, show, compare, alternatives, and install-prompt requests never authorize execution of a recommended third-party command. Present the upstream link and command-source label, then require explicit user approval.
-- Keep external catalog data attributable to its upstream repositories. Do not copy, relicense, or present catalog records as proprietary source code.
-- Do not claim an npm package is published or installable until the package registry has been verified. Keep source-clone instructions accurate when publication is pending.
-- Preserve user changes and unrelated dirty files. Use `apply_patch` for source/document edits; never use destructive reset or checkout operations without clear owner authorization.
-
-## Public copy, demos, and video assets
-
-- Public output is written only for viewers and users. Keep creator instructions, capture paths, replacement notes, source ledgers, and internal explanations in creator-only files.
-- Do not fabricate tests, personal experience, performance, popularity, availability, installation success, or factual claims. Verify dynamic claims from primary sources or phrase uncertainty plainly.
-- For SkillHot demonstrations, show the real flow: vague need → explained candidates → detail or comparison → review-first installation handoff. Do not portray a suggested command as automatically safe or already executed.
-- When requested, use the established Sav voice chain only. Keep the narration natural, concrete, and free of generic promotional language.
+- Run the relevant verification before claiming code, CI, deployment, release, or repository state is successful.
+- Public documentation and demos should describe observable behavior. Keep internal capture notes, source ledgers, production instructions, and private rationale out of the public repository.
