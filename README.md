@@ -2,22 +2,21 @@
 
 SkillHot is a local, explainable discovery tool for reusable Agent Skills. It ships a dependency-free TypeScript core, a command-line interface, a loopback HTTP API, and an Agent Skill that helps coding agents search before suggesting an installation.
 
-## Install and run
+## Install and run from source
 
-The published command package is `@skillhot/cli`. Use its package-qualified form so npm resolves the intended package:
-
-```sh
-npx --package @skillhot/cli skillhot find "写长文" --format json
-```
-
-`npx skillhot` is not a supported invocation: there is no unscoped `skillhot` npm package in this release. After a global or project-local installation, the executable itself is simply `skillhot`.
+`@skillhot/cli` is not published to npm yet. The current open-source release runs from this repository and requires Node.js 20 or newer:
 
 ```sh
-npm install --global @skillhot/cli
-skillhot find "写长文"
+git clone https://github.com/savanna0425/skillhot-cli.git
+cd skillhot-cli
+corepack enable
+pnpm install --frozen-lockfile
+pnpm build
+alias skillhot="node $PWD/packages/cli/dist/main.js"
+skillhot find "写长文" --format json
 ```
 
-Requires Node.js 20 or newer.
+The executable will be named `skillhot` after the npm package is published. Until then, do not use `npx --package @skillhot/cli` or `npm install --global @skillhot/cli`.
 
 ## CLI
 
@@ -47,7 +46,7 @@ skillhot serve --host 127.0.0.1 --port 4318
 skillhot serve --host 0.0.0.0 --allow-remote-host --port 4318
 
 # Print, but do not run, a copy command for the bundled coding-agent skill.
-skillhot skill install --agent codex --source ./skills/skillhot-discovery/SKILL.md --format json
+skillhot skill install --agent codex --source "$PWD/skills/skillhot-discovery/SKILL.md" --format json
 ```
 
 The bundled catalog is used offline. A successful `update` writes a cache at `$XDG_CACHE_HOME/skillhot/catalog.json`, or `~/.cache/skillhot/catalog.json` when `XDG_CACHE_HOME` is unset. A corrupt or missing cache falls back to the bundled data.
@@ -108,10 +107,10 @@ Catalog records are discovery metadata derived from public upstream repositories
 
 ## Install the Agent Skill
 
-Clone this repository, then ask the CLI to print the destination and copy command:
+After completing the source setup above, ask the CLI to print the destination and copy command:
 
 ```sh
-npx --package @skillhot/cli skillhot skill install \
+skillhot skill install \
   --agent codex \
   --source "$PWD/skills/skillhot-discovery/SKILL.md"
 ```

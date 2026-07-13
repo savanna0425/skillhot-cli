@@ -5,7 +5,7 @@ description: Use when a coding agent needs to discover, compare, explain, or saf
 
 # SkillHot Discovery
 
-Use only the published `skillhot` CLI.
+Use the `skillhot` CLI already installed by the user. If it is unavailable, provide the repository's source-setup instructions; do not attempt an installation or execute an external command.
 
 1. Run `skillhot find "<need>" --format json`. Explain the returned reasons; do not treat search results as verified facts.
 2. Run `skillhot show <owner/repo>` before stating facts about a candidate. Compare the details with the user's need.

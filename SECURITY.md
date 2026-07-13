@@ -4,4 +4,4 @@ Please do not report security vulnerabilities in public issues. Report them priv
 
 We will acknowledge a valid report within seven days and coordinate disclosure after a fix or mitigation is available. Do not include third-party credentials, private catalog data, or executable proof-of-concept payloads beyond what is needed to reproduce the issue safely.
 
-Scope includes the published npm packages, the local HTTP server, catalog update handling, and Agent Skill installation guidance.
+Scope includes the npm packages when published, the local HTTP server, catalog update handling, and Agent Skill installation guidance.
