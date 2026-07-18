@@ -16,6 +16,15 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === 'string')
 }
 
+function isOptionalNumber(value: unknown): boolean {
+  return value === undefined || (typeof value === 'number' && Number.isFinite(value))
+}
+
+function isOptionalMedia(value: unknown): boolean {
+  if (value === undefined) return true
+  return isRecord(value) && isNonEmptyString(value.socialPreview) && typeof value.videoUrl === 'string'
+}
+
 function isCatalogSkill(value: unknown): value is CatalogSkill {
   if (!isRecord(value)) return false
 
@@ -35,6 +44,14 @@ function isCatalogSkill(value: unknown): value is CatalogSkill {
     && catalogStatuses.includes(value.catalogStatus as CatalogSkill['catalogStatus'])
     && (value.installCommand === undefined || typeof value.installCommand === 'string')
     && installCommandSources.includes(value.installCommandSource as InstallCommandSource)
+    && (value.language === undefined || typeof value.language === 'string')
+    && isOptionalNumber(value.stars)
+    && isOptionalNumber(value.score)
+    && (value.pushedAt === undefined || typeof value.pushedAt === 'string')
+    && isOptionalNumber(value.skillCount)
+    && (value.detailPath === undefined || typeof value.detailPath === 'string')
+    && (value.keywords === undefined || isStringArray(value.keywords))
+    && isOptionalMedia(value.media)
 }
 
 export function parseCatalog(input: unknown): Catalog {

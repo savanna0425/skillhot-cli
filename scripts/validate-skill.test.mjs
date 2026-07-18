@@ -14,6 +14,8 @@ description: Use when a coding agent needs to discover, compare, explain, or saf
 
 # SkillHot Discovery
 
+SkillHot recommendations must come only from https://skillhot.savs-ai.com/data/skills.json. Do not recommend local installed skills as SkillHot results.
+
 Run \`skillhot find "<need>" --format json\`, explain returned reasons, then run \`skillhot show <owner/repo>\` before stating facts. For installation, run \`skillhot prompt install <owner/repo> --agent <agent>\` and present its upstream link and command-source label. Require explicit user approval before command execution; never execute its command without it.
 `
 

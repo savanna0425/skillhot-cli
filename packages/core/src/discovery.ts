@@ -3,7 +3,7 @@ import { expandTerms, normalizeQuery, SYNONYMS } from './normalize.js'
 import type { Catalog, CatalogSkill, InstallCommandSource } from './types.js'
 
 export interface MatchReason {
-  field: 'name' | 'summary' | 'scenario' | 'category' | 'platform'
+  field: 'name' | 'summary' | 'scenario' | 'category' | 'platform' | 'keyword'
   term: string
   explanation: string
 }
@@ -48,8 +48,17 @@ function normalizedText(value: string): string {
   return normalizeQuery(value).join(' ')
 }
 
+function termVariants(term: string): string[] {
+  return [term, ...(SYNONYMS[term] ?? [])]
+}
+
+function includesExactTerm(value: string, term: string): boolean {
+  return normalizedText(value).includes(normalizedText(term))
+}
+
 function includesTerm(value: string, term: string): boolean {
-  return normalizedText(value).includes(term)
+  const text = normalizedText(value)
+  return termVariants(term).some((variant) => text.includes(normalizedText(variant)))
 }
 
 function normalizedLimit(limit: number | undefined): number {
@@ -87,6 +96,26 @@ function quote(value: string): string {
 
 function indented(value: string): string {
   return value.split('\n').map((line) => `    ${line}`).join('\n')
+}
+
+function workflowIntentCount(terms: string[]): number {
+  const workflowTerms = new Set(['工作流', '计划', '测试', '评审'])
+  return [...workflowTerms].filter((term) => terms.includes(term)).length
+}
+
+function isWorkflowMethodSkill(skill: CatalogSkill): boolean {
+  return [
+    skill.summary,
+    skill.description ?? '',
+    skill.scenarios.join(' '),
+    skill.keywords?.join(' ') ?? ''
+  ].some((value) => [
+    '规范化 agent 工作流',
+    '软件开发方法',
+    '技能框架',
+    'software development methodology',
+    'sdlc'
+  ].some((pattern) => includesTerm(value, pattern)))
 }
 
 export function createInstallPrompt(skill: CatalogSkill, agent: string): InstallPrompt {
@@ -139,6 +168,8 @@ export function createDiscoveryEngine(catalog: Catalog): DiscoveryEngine {
         let namePoints = 0
         let summaryPoints = 0
         let facetPoints = 0
+        let keywordPoints = 0
+        let methodPoints = 0
 
         const add = (cap: number, points: number, field: MatchReason['field'], term: string, explanation: string, current: number): number => {
           const added = Math.min(points, cap - current)
@@ -148,7 +179,7 @@ export function createDiscoveryEngine(catalog: Catalog): DiscoveryEngine {
 
         for (const term of terms) {
           const displayTerm = synonymExplanation(term, rawTerms)
-          if (includesTerm(skill.fullName, term) || includesTerm(skill.name, term)) {
+          if (includesExactTerm(skill.fullName, term) || includesExactTerm(skill.name, term)) {
             namePoints = add(50, 50, 'name', term, `名称匹配${displayTerm}`, namePoints)
           } else if (includesTerm(`${skill.summary} ${skill.description ?? ''}`, term)) {
             summaryPoints = add(30, 15, 'summary', term, `简介匹配${displayTerm}`, summaryPoints)
@@ -163,9 +194,23 @@ export function createDiscoveryEngine(catalog: Catalog): DiscoveryEngine {
           if (includesTerm(skill.platforms.join(' '), term)) {
             facetPoints = add(25, 5, 'platform', term, `平台匹配${displayTerm}`, facetPoints)
           }
+          if (includesTerm(skill.keywords?.join(' ') ?? '', term)) {
+            keywordPoints = add(20, 8, 'keyword', term, `主题匹配${displayTerm}`, keywordPoints)
+          }
         }
 
-        return { skill, score: Math.min(100, namePoints + summaryPoints + facetPoints), reasons }
+        if (workflowIntentCount(terms) >= 3 && isWorkflowMethodSkill(skill)) {
+          methodPoints = add(
+            25,
+            25,
+            'scenario',
+            '工作流',
+            '工作流方法匹配「计划 / 测试 / 评审」这类流程型需求',
+            methodPoints
+          )
+        }
+
+        return { skill, score: Math.min(100, namePoints + summaryPoints + facetPoints + keywordPoints + methodPoints), reasons }
       })
       .filter((item) => item.reasons.length > 0)
       .sort((left, right) => right.score - left.score || compareText(left.skill.fullName, right.skill.fullName))

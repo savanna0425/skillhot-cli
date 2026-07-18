@@ -1,6 +1,6 @@
 # SkillHot CLI
 
-SkillHot is a local, explainable discovery tool for reusable Agent Skills. It ships a dependency-free TypeScript core, a command-line interface, a loopback HTTP API, and an Agent Skill that helps coding agents search before suggesting an installation.
+SkillHot is an explainable discovery tool for reusable Agent Skills. It ships a dependency-free TypeScript core, a command-line interface, a loopback HTTP API, and an Agent Skill that helps coding agents search the live SkillHot catalog before suggesting an installation.
 
 ## Install and run from source
 
@@ -24,9 +24,11 @@ All commands support `--format text`, `--format markdown`, or `--format json` un
 
 ```sh
 # Find ranked, explained recommendations. Filters can be combined.
+# This reads the daily SkillHot catalog at https://skillhot.savs-ai.com/data/skills.json.
 skillhot find "写长文" --limit 5 --category 写作 --platform codex --license MIT --status active
 
 # Inspect one catalog record by id, owner/repository name, or short name.
+# This first resolves the entry from skills.json, then fetches its detailPath when available.
 skillhot show 1073224795 --format json
 
 # Compare two to five distinct entries.
@@ -49,19 +51,18 @@ skillhot serve --host 0.0.0.0 --allow-remote-host --port 4318
 skillhot skill install --agent codex --source "$PWD/skills/skillhot-discovery/SKILL.md" --format json
 ```
 
-The bundled catalog is used offline. A successful `update` writes a cache at `$XDG_CACHE_HOME/skillhot/catalog.json`, or `~/.cache/skillhot/catalog.json` when `XDG_CACHE_HOME` is unset. A corrupt or missing cache falls back to the bundled data.
+Normal discovery commands use the live daily catalog at `https://skillhot.savs-ai.com/data/skills.json`. The packaged catalog is a test and packaging fixture, not the source of truth for user recommendations. If the live catalog cannot be fetched, the CLI reports an error instead of falling back to stale recommendations.
+
+`show` keeps recommendation payloads light: `find` resolves candidates from `skills.json`, and `show` fetches the entry's `detailPath` only when the user asks to inspect a specific skill. A successful `update` can still write an explicit cache at `$XDG_CACHE_HOME/skillhot/catalog.json`, or `~/.cache/skillhot/catalog.json`, for development workflows.
 
 ## TypeScript API
 
 `@skillhot/core` exposes catalog parsing, storage helpers, normalization, and the discovery engine.
 
 ```ts
-import { createDiscoveryEngine, loadCatalog } from '@skillhot/core'
+import { createDiscoveryEngine, loadLiveCatalogWithMetadata } from '@skillhot/core'
 
-const catalog = await loadCatalog({
-  bundledPath: './catalog.json',
-  cachePath: `${process.env.HOME}/.cache/skillhot/catalog.json`
-})
+const { catalog } = await loadLiveCatalogWithMetadata()
 
 const engine = createDiscoveryEngine(catalog)
 const result = engine.find({ query: '写长文', limit: 5 })
@@ -73,6 +74,8 @@ console.log(result.recommendations)
 ## Local HTTP API
 
 Run `skillhot serve --port 4318` first. Successful responses use `{ data, meta }`; errors use `{ error: { code, message } }`. The server binds to `127.0.0.1` by default.
+
+`/v1/recommendations` uses only the live `skills.json` index. `/v1/skills/:ref` resolves the selected entry and fetches its `detailPath` detail payload on demand.
 
 ```sh
 # Service status
@@ -101,7 +104,7 @@ curl --fail http://127.0.0.1:4318/v1/agent-prompt \
 
 ## Safety and data policy
 
-SkillHot is a discovery layer, not an installer. Search results are suggestions; inspect the original upstream README before relying on details. `prompt install` labels whether a command is from upstream, catalog-extracted, or unavailable, and tells the user to approve before execution. `skill install` prints a copy command only and never writes a file. Remote API binding needs explicit opt-in, and catalog updates require an explicit URL.
+SkillHot is a discovery layer, not an installer. Search results must come from the live SkillHot catalog, not local installed skills or model memory. Inspect the original upstream README before relying on details. `prompt install` labels whether a command is from upstream, catalog-extracted, or unavailable, and tells the user to approve before execution. `skill install` prints a copy command only and never writes a file. Remote API binding needs explicit opt-in.
 
 Catalog records are discovery metadata derived from public upstream repositories. Each record retains its upstream URL. SkillHot does not copy, redistribute, or relicense upstream repositories. See [DATA-LICENSE.md](DATA-LICENSE.md).
 
@@ -115,7 +118,7 @@ skillhot skill install \
   --source "$PWD/skills/skillhot-discovery/SKILL.md"
 ```
 
-Review the displayed source and command, then run the printed command yourself only if you approve it. The installed skill requires `find`, `show`, and review-first `prompt install` workflows.
+Review the displayed source and command, then run the printed command yourself only if you approve it. Installing the Agent Skill does not install the CLI; complete the source setup first. The installed skill requires live-catalog `find`, detail-on-demand `show`, and review-first `prompt install` workflows.
 
 ## Development and contributing
 

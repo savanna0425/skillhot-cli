@@ -9,9 +9,16 @@ const catalog = parseCatalog({
     {
       id: 'obra/superpowers', fullName: 'obra/superpowers', name: 'superpowers',
       url: 'https://github.com/obra/superpowers', sourceUrl: 'https://github.com/obra/superpowers#readme',
-      summary: '工程软件开发工作流', category: '编程开发', scenarios: ['复杂软件开发'], platforms: ['Codex'],
+      summary: '一套面向智能体的软件开发方法与技能框架', description: 'An agentic skills framework & software development methodology that works.',
+      category: '编程开发', scenarios: ['复杂软件开发', '规范化 Agent 工作流', '团队工程实践'], platforms: ['Codex'],
       license: 'MIT', activity: '本周活跃', catalogStatus: 'active', installCommand: 'git clone https://github.com/obra/superpowers.git',
-      installCommandSource: 'catalog-extracted'
+      installCommandSource: 'catalog-extracted', keywords: ['sdlc', 'skills', 'superpowers']
+    },
+    {
+      id: 'aaa/general-code-helper', fullName: 'aaa/general-code-helper', name: 'general-code-helper',
+      url: 'https://github.com/aaa/general-code-helper', sourceUrl: 'https://github.com/aaa/general-code-helper#readme',
+      summary: '普通编程工具集合', category: '编程开发', scenarios: ['软件开发'], platforms: ['Codex'],
+      license: 'MIT', activity: '本周活跃', catalogStatus: 'active', installCommandSource: 'unavailable'
     },
     {
       id: 'anthropics/skills', fullName: 'anthropics/skills', name: 'skills',
@@ -74,10 +81,10 @@ test('comparison accepts two to five unique known skills', () => {
   assert.throws(() => engine.compare(['obra/superpowers', 'OBRA/SUPERPOWERS']), /unique/)
 })
 
-test('ranks matching repository names before summary matches and keeps ties deterministic', () => {
+test('ranks matching repository names before topic matches and keeps ties deterministic', () => {
   const result = engine.find({ query: 'skills', limit: 5 })
 
-  assert.deepEqual(result.recommendations.map((item) => item.skill.id), ['anthropics/skills'])
+  assert.equal(result.recommendations[0].skill.id, 'anthropics/skills')
   assert.equal(result.recommendations[0].score, 50)
   assert.equal(result.recommendations[0].reasons[0].field, 'name')
 })
@@ -90,7 +97,17 @@ test('filters results by category, platform, and catalog status', () => {
     catalogStatus: 'active'
   })
 
-  assert.deepEqual(result.recommendations.map((item) => item.skill.id), ['obra/superpowers'])
+  assert.deepEqual(new Set(result.recommendations.map((item) => item.skill.id)), new Set(['aaa/general-code-helper', 'obra/superpowers']))
+})
+
+test('ranks workflow collections over generic coding matches for plan test review requests', () => {
+  const result = engine.find({
+    query: '我希望你写代码的时候别一上来就改，先做计划，再写测试，最后自己做一遍代码评审',
+    limit: 3
+  })
+
+  assert.equal(result.recommendations[0].skill.id, 'obra/superpowers')
+  assert.match(result.recommendations[0].reasons.map((item) => item.explanation).join('\n'), /计划|测试|评审|工作流/)
 })
 
 test('resolves an exact name case-insensitively and rejects unknown references', () => {

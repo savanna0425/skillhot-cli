@@ -4,7 +4,7 @@ import { Writable } from 'node:stream'
 import { homedir, tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createDiscoveryEngine, loadCatalogWithMetadata, refreshCatalog, SkillHotError } from '@skillhot/core'
+import { createDiscoveryEngine, loadCatalogWithMetadata, loadLiveCatalogWithMetadata, refreshCatalog, SKILLHOT_PUBLIC_CATALOG_URL, SkillHotError, type CatalogMetadata, type CatalogSkill } from '@skillhot/core'
 import { print, type OutputFormat } from './format.js'
 import { createServer, listen } from './server.js'
 
@@ -149,6 +149,19 @@ function skillInstallInstructions(agent: string, source: string): { agent: strin
   }
 }
 
+function detailPathFor(fullName: string): string {
+  return `data/details/${fullName.toLowerCase().replace(/[^a-z0-9]+/g, '__').replace(/^__|__$/g, '')}.json`
+}
+
+async function liveSkillDetail(skill: CatalogSkill, metadata: CatalogMetadata): Promise<unknown> {
+  if (metadata.source !== 'live') return skill
+  const detailPath = skill.detailPath ?? detailPathFor(skill.fullName)
+  const root = new URL('/', metadata.url ?? SKILLHOT_PUBLIC_CATALOG_URL)
+  const response = await fetch(new URL(detailPath, root))
+  if (!response.ok) return skill
+  return response.json() as Promise<unknown>
+}
+
 async function runOperationalCommand(command: string | undefined, positionals: string[], flags: Record<string, FlagValue>, env: NodeJS.ProcessEnv) {
   if (command === 'update') {
     return refreshCatalog({
@@ -184,14 +197,23 @@ export async function main(argv: string[], io: CliIo = process): Promise<number>
     assertAllowedFlags(command, positionals, flags)
     const env = io.env ?? process.env
     const cachePath = defaultCachePath(env)
-    const { catalog, metadata } = await loadCatalogWithMetadata({ bundledPath: bundledCatalogPath(), cachePath })
+    if (command === 'update' || (command === 'skill' && positionals[0] === 'install')) {
+      print(await runOperationalCommand(command, positionals, flags, env), outputFormat(flags.format), io.stdout)
+      return 0
+    }
+    const useBundledCatalog = env.SKILLHOT_USE_BUNDLED_CATALOG === '1'
+    const { catalog, metadata } = useBundledCatalog
+      ? await loadCatalogWithMetadata({ bundledPath: bundledCatalogPath(), cachePath })
+      : await loadLiveCatalogWithMetadata()
     const engine = createDiscoveryEngine(catalog)
     if (command === 'serve') {
       const host = stringFlag(flags.host, '127.0.0.1', 'host')
       if (flags['allow-remote-host'] !== undefined && flags['allow-remote-host'] !== true) {
         throw new SkillHotError('INVALID_ARGUMENT', 'allow-remote-host does not take a value.')
       }
-      await listen(createServer(engine, metadata), { host, port: portFlag(flags.port), allowRemote: flags['allow-remote-host'] === true })
+      await listen(createServer(engine, metadata, {
+        detailResolver: (skill) => liveSkillDetail(skill, metadata)
+      }), { host, port: portFlag(flags.port), allowRemote: flags['allow-remote-host'] === true })
       return 0
     }
     const value = command === 'find'
@@ -204,7 +226,7 @@ export async function main(argv: string[], io: CliIo = process): Promise<number>
         catalogStatus: catalogStatus(flags.status)
       })
       : command === 'show'
-        ? engine.show(required(positionals[0], 'skill reference'))
+        ? await liveSkillDetail(engine.show(required(positionals[0], 'skill reference')), metadata)
         : command === 'compare'
           ? engine.compare(positionals)
           : command === 'alternatives'
@@ -231,7 +253,7 @@ export async function runCli(argv: string[]): Promise<{ exitCode: number; stdout
   const exitCode = await main(argv, {
     stdout: stream(chunks.stdout),
     stderr: stream(chunks.stderr),
-    env: { ...process.env, XDG_CACHE_HOME: join(tmpdir(), 'skillhot-cli-test-cache') }
+    env: { ...process.env, XDG_CACHE_HOME: join(tmpdir(), 'skillhot-cli-test-cache'), SKILLHOT_USE_BUNDLED_CATALOG: '1' }
   })
   return { exitCode, stdout: Buffer.concat(chunks.stdout).toString('utf8'), stderr: Buffer.concat(chunks.stderr).toString('utf8') }
 }

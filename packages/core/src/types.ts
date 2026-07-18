@@ -17,6 +17,17 @@ export interface CatalogSkill {
   catalogStatus: 'active' | 'archived'
   installCommand?: string
   installCommandSource: InstallCommandSource
+  language?: string
+  stars?: number
+  score?: number
+  pushedAt?: string
+  skillCount?: number
+  detailPath?: string
+  keywords?: string[]
+  media?: {
+    socialPreview: string
+    videoUrl: string
+  }
 }
 
 export interface Catalog {

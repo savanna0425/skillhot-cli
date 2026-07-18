@@ -1,5 +1,5 @@
 import { createServer as createHttpServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
-import { SkillHotError, type CatalogMetadata, type DiscoveryEngine } from '@skillhot/core'
+import { SkillHotError, type CatalogMetadata, type CatalogSkill, type DiscoveryEngine } from '@skillhot/core'
 
 const MAX_JSON_BODY_BYTES = 64 * 1024
 
@@ -7,6 +7,10 @@ export interface ListenOptions {
   host?: string
   port?: number
   allowRemote?: boolean
+}
+
+export interface ServerOptions {
+  detailResolver?: (skill: CatalogSkill) => Promise<unknown>
 }
 
 interface ErrorResponse {
@@ -130,7 +134,7 @@ function recommendations(engine: DiscoveryEngine, search: URLSearchParams) {
   })
 }
 
-async function route(engine: DiscoveryEngine, metadata: CatalogMetadata, request: IncomingMessage, response: ServerResponse): Promise<void> {
+async function route(engine: DiscoveryEngine, metadata: CatalogMetadata, options: ServerOptions, request: IncomingMessage, response: ServerResponse): Promise<void> {
   const url = new URL(request.url ?? '/', 'http://localhost')
   const method = request.method ?? 'GET'
   const alternativesMatch = url.pathname.match(/^\/v1\/skills\/(.+)\/alternatives$/)
@@ -150,7 +154,9 @@ async function route(engine: DiscoveryEngine, metadata: CatalogMetadata, request
   }
   if (skillMatch !== null) {
     if (method !== 'GET') return methodNotAllowed(response, 'GET')
-    return json(response, 200, { data: engine.show(decodeRef(skillMatch[1])), meta: metadata })
+    const skill = engine.show(decodeRef(skillMatch[1]))
+    const data = options.detailResolver === undefined ? skill : await options.detailResolver(skill)
+    return json(response, 200, { data, meta: metadata })
   }
   if (url.pathname === '/v1/compare') {
     if (method !== 'POST') return methodNotAllowed(response, 'POST')
@@ -170,9 +176,9 @@ async function route(engine: DiscoveryEngine, metadata: CatalogMetadata, request
   failure(response, 404, 'NOT_FOUND', 'No route matches this request.')
 }
 
-export function createServer(engine: DiscoveryEngine, metadata: CatalogMetadata): Server {
+export function createServer(engine: DiscoveryEngine, metadata: CatalogMetadata, options: ServerOptions = {}): Server {
   return createHttpServer((request, response) => {
-    void route(engine, metadata, request, response).catch((error: unknown) => {
+    void route(engine, metadata, options, request, response).catch((error: unknown) => {
       if (!response.headersSent) respondToError(response, error)
     })
   })

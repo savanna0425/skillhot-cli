@@ -7,6 +7,8 @@ const requiredBodyRules = [
   'skillhot find',
   'skillhot show',
   'skillhot prompt install',
+  'https://skillhot.savs-ai.com/data/skills.json',
+  'do not recommend local installed skills',
 ]
 
 export function validateSkillText(skillText) {

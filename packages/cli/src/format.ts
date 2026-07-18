@@ -24,6 +24,11 @@ function isInstallPrompt(value: unknown): value is InstallPrompt {
 
 function renderSkill(skill: CatalogSkill, markdown: boolean): string {
   const title = markdown ? `## ${skill.fullName}` : skill.fullName
+  const skillRecord = skill as unknown as Record<string, unknown>
+  const profile = isRecord(skillRecord.projectProfile) ? skillRecord.projectProfile : undefined
+  const whatItIs = typeof profile?.whatItIs === 'string' ? profile.whatItIs : undefined
+  const problemSolved = Array.isArray(profile?.problemSolved) ? profile.problemSolved.filter((item): item is string => typeof item === 'string') : []
+  const gettingStarted = Array.isArray(profile?.gettingStarted) ? profile.gettingStarted.filter((item): item is string => typeof item === 'string') : []
   const fields = [
     `${markdown ? '- ' : ''}简介：${skill.summary}`,
     `${markdown ? '- ' : ''}分类：${skill.category}`,
@@ -32,6 +37,9 @@ function renderSkill(skill: CatalogSkill, markdown: boolean): string {
     `${markdown ? '- ' : ''}上游 README：${skill.sourceUrl}`,
     `${markdown ? '- ' : ''}安装命令来源：${skill.installCommandSource}`
   ]
+  if (whatItIs) fields.push(`${markdown ? '- ' : ''}这是什么：${whatItIs}`)
+  if (problemSolved.length > 0) fields.push(`${markdown ? '- ' : ''}它解决什么问题：${problemSolved.join(markdown ? '；' : '；')}`)
+  if (gettingStarted.length > 0) fields.push(`${markdown ? '- ' : ''}怎么开始用：${gettingStarted.join(markdown ? '；' : '；')}`)
   return [title, ...fields].join('\n')
 }
 

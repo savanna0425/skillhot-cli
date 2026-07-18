@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { once } from 'node:events'
 import test from 'node:test'
 import { createDiscoveryEngine, parseCatalog, type CatalogMetadata } from '@skillhot/core'
-import { createServer, validateHost } from '../dist/server.js'
+import { createServer, validateHost, type ServerOptions } from '../dist/server.js'
 
 const catalog = parseCatalog({
   version: 1,
@@ -27,8 +27,8 @@ const catalog = parseCatalog({
 
 const metadata: CatalogMetadata = { source: 'bundled', generatedAt: catalog.generatedAt, count: catalog.skills.length }
 
-async function startServer() {
-  const server = createServer(createDiscoveryEngine(catalog), metadata)
+async function startServer(options: ServerOptions = {}) {
+  const server = createServer(createDiscoveryEngine(catalog), metadata, options)
   server.listen(0, '127.0.0.1')
   await once(server, 'listening')
   const address = server.address()
@@ -36,8 +36,8 @@ async function startServer() {
   return { server, baseUrl: `http://127.0.0.1:${address.port}` }
 }
 
-async function withServer(run: (baseUrl: string) => Promise<void>) {
-  const { server, baseUrl } = await startServer()
+async function withServer(run: (baseUrl: string) => Promise<void>, options: ServerOptions = {}) {
+  const { server, baseUrl } = await startServer(options)
   try {
     await run(baseUrl)
   } finally {
@@ -54,6 +54,26 @@ test('returns explained recommendations over HTTP', async () => {
     const body = await response.json()
     assert.ok(body.data.recommendations[0].reasons.length)
     assert.deepEqual(body.meta, metadata)
+  })
+})
+
+test('resolves detail payloads only on the skill detail route', async () => {
+  let detailCalls = 0
+  await withServer(async (baseUrl) => {
+    const recommendationsResponse = await fetch(`${baseUrl}/v1/recommendations?q=%E5%86%99%E9%95%BF%E6%96%87&limit=1`)
+    assert.equal(recommendationsResponse.status, 200)
+    assert.equal(detailCalls, 0)
+
+    const detailResponse = await fetch(`${baseUrl}/v1/skills/writer%2Flongform`)
+    assert.equal(detailResponse.status, 200)
+    const detail = await detailResponse.json()
+    assert.equal(detail.data.projectProfile.whatItIs, '详情接口内容')
+    assert.equal(detailCalls, 1)
+  }, {
+    detailResolver: async (skill) => {
+      detailCalls += 1
+      return { ...skill, projectProfile: { whatItIs: '详情接口内容' } }
+    }
   })
 })
 
